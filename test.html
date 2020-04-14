@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+</head>
+
+<body>
+    
+    <table>
+
+        <tr>
+            <th>userIdd</th>
+            <td id="userIdProfileField"></td>
+        </tr>
+        <tr>
+            <th>displayName</th>
+            <td id="displayNameField"></td>
+        </tr>
+        <tr>
+            <th>statusMessage</th>
+            <td id="statusMessageField"></td>
+        </tr>
+
+    </table>
+
+    <br><br>
+    <button id="openProfile">openProfile</button>
+    <br><br>
+        <button id="sendMessageButton">sendMessageButton</button>
+    <br><br>
+        <button id="openWindowButton">openWindowButton</button>
+    <br><br>
+        <button id="scanQrCodeButton">scanQrCodeButton</button>    
+    <br><br>
+    <button id="getAccessToken">getAccessToken</button>     
+    <br><br>
+    <button id="liffLogoutButton">liffLogoutButton</button>  
+
+    
+
+    <script src="https://static.line-scdn.net/liff/edge/2.1/sdk.js"></script>
+    <script>
+
+        function initializeLiff(myLiffId) {
+            liff
+                .init({
+                    liffId: myLiffId
+                })
+                .then(() => {
+                    // start to use LIFF's api
+                    initializeApp();
+                })
+                .catch((err) => {
+                });
+        }
+
+        initializeLiff('LiffId');
+
+        // openWindow profile
+        document.getElementById('openProfile').addEventListener('click', function()  {
+            if (liff.isInClient()) {
+                
+                liff.getProfile().then(function(profile) {
+                    document.getElementById('userIdProfileField').textContent = profile.userId;
+                    document.getElementById('displayNameField').textContent = profile.displayName;
+                    document.getElementById('statusMessageField').textContent = profile.statusMessage;
+                });
+
+            } else {
+                window.alert('Error getting profile: ' + error);
+            }
+        });
+
+        // openWindow call
+        document.getElementById('openWindowButton').addEventListener('click', function() {
+            liff.openWindow({
+                url: 'https://line.me',
+                external: true
+            });
+        });
+
+        // sendMessages call
+        document.getElementById('sendMessageButton').addEventListener('click', function() {
+        if (!liff.isInClient()) {
+            sendAlertIfNotInClient();
+        } else {
+            liff.sendMessages([{
+                'type': 'text',
+                'text': "You've successfully sent a message! Hooray!"
+            }]).then(function() {
+                window.alert('Message sent');
+            }).catch(function(error) {
+                window.alert('Error sending message: ' + error);
+            });
+        }
+        });
+
+        // scanCode call
+        document.getElementById('scanQrCodeButton').addEventListener('click', function() {
+            if (!liff.isInClient()) {
+                sendAlertIfNotInClient();
+            } else {
+                liff.scanCode().then(result => {
+                    // e.g. result = { value: "Hello LIFF app!" }
+                    const stringifiedResult = JSON.stringify(result);
+                    document.getElementById('scanQrField').textContent = stringifiedResult;
+                    toggleQrCodeReader();
+                }).catch(err => {
+                    document.getElementById('scanQrField').textContent = "scanCode failed!";
+                });
+            }
+        });
+
+        // get access token
+        document.getElementById('getAccessToken').addEventListener('click', function() {
+            if (!liff.isLoggedIn() && !liff.isInClient()) {
+                alert('To get an access token, you need to be logged in. Please tap the "login" button below and try again.');
+            } else {
+                const accessToken = liff.getAccessToken();
+                window.alert('accessToken: ' + accessToken);
+            }
+        });        
+
+        // logout call only when external browse
+        document.getElementById('liffLogoutButton').addEventListener('click', function() {
+            if (liff.isLoggedIn()) {
+                liff.logout();
+                window.location.reload();
+            }
+        });
+    </script>
+</body>
+
+</html>
